@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.Opmodes;
 
+import static org.firstinspires.ftc.teamcode.Utilities.Drawing.drawDebug;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
+
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -63,63 +65,69 @@ public class CloseBlue extends OpMode {
     public void statePathUpdate() {
         switch (pathstate) {
             case Drive_StartPos_ShootPos:
-                telemetry.addLine("Drive_StartPos_ShootPos");
-                follower.followPath(driveStartPosShootPos, true);
-                setPathState(PathState.Shoot_Preload);
+                if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    telemetry.addLine("Drive_StartPos_ShootPos");
+                    follower.followPath(driveStartPosShootPos, true);
+                    setPathState(PathState.Shoot_Preload);
+                }
                 break;
             case Shoot_Preload:
                 if (!follower.isBusy()) {
                     telemetry.addLine("ShootPreload");
                     robot.outtake.setPower(0.8);
-                    //Timer Delay
-                    robot.gate.setPosition(0.2);
-                    robot.mid1.setPower(1);
-                    //Timer Delay
-                    robot.outtake.setPower(0);
-                    robot.gate.setPosition(0.65);
-                    robot.mid1.setPower(0);
-                    setPathState(PathState.Drive_ShootPos_AlignedPos);
+                    if (pathTimer.getElapsedTimeSeconds() > 5) {
+                        robot.gate.setPosition(0.2);
+                        robot.mid1.setPower(1);
+                        if (pathTimer.getElapsedTimeSeconds() > 8) {
+                            robot.outtake.setPower(0);
+                            robot.gate.setPosition(0.65);
+                            robot.mid1.setPower(0);
+                            setPathState(PathState.Drive_ShootPos_AlignedPos);
+                        }
+                    }
                 }
                 break;
             case Drive_ShootPos_AlignedPos:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2) {
                     telemetry.addLine("Drive_ShootPos_AlignedPos");
                     follower.followPath(driveShootPosAlignedPos, true);
                     setPathState(PathState.Drive_AlignedPos_LoadedPos);
                 }
                 break;
             case Drive_AlignedPos_LoadedPos:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2) {
                     telemetry.addLine("Drive_AlignedPos_LoadedPos");
                     follower.followPath(driveAlignedPosLoadedPos, true);
                     setPathState(PathState.Drive_LoadedPos_ShootPos);
                 }
                 break;
             case Drive_LoadedPos_ShootPos:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2) {
                     telemetry.addLine("Drive_LoadedPos_ShootPos");
                     follower.followPath(driveLoadedPosShootPos, true);
                     setPathState(PathState.Shoot_Secondary);
                 }
                 break;
             case Shoot_Secondary:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() ) {
                     telemetry.addLine("Shoot_Secondary");
                     robot.outtake.setPower(0.8);
-                    //Timer Delay
-                    robot.gate.setPosition(0.2);
-                    robot.mid1.setPower(1);
-                    //Timer Delay
-                    robot.outtake.setPower(0);
-                    robot.gate.setPosition(0.65);
-                    robot.mid1.setPower(0);
-                    setPathState(PathState.Drive_ShootPos_OffLaunchPos);
+                    if (pathTimer.getElapsedTimeSeconds() > 5) {
+                        robot.gate.setPosition(0.2);
+                        robot.mid1.setPower(1);
+                        if (pathTimer.getElapsedTimeSeconds() > 8) {
+                            robot.outtake.setPower(0);
+                            robot.gate.setPosition(0.65);
+                            robot.mid1.setPower(0);
+                            setPathState(PathState.Drive_ShootPos_OffLaunchPos);
+                        }
+                    }
                 }
                 break;
             case Drive_ShootPos_OffLaunchPos:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2) {
                     telemetry.addLine("Drive_ShootPos_OffLaunchPos");
-                    follower.followPath(driveShootPosOffLaunchPos, true);
+                    follower.followPath(driveShootPosOffLaunchPos, false);
                 }
                 break;
             default:
@@ -154,6 +162,7 @@ public class CloseBlue extends OpMode {
     public void loop() {
         follower.update();
         statePathUpdate();
+        drawDebug(follower);
         telemetry.addData("PathState", pathstate.toString());
         telemetry.addData("X", follower.getPose().getX());
         telemetry.addData("Y", follower.getPose().getY());
